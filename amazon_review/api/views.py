@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
-from parser import *
+from django.core.exceptions import ObjectDoesNotExist
+from api.models import *
+from django.forms import model_to_dict
+from . import parser
+
 def index(request):
     return HttpResponse('success!\n')
 
@@ -15,16 +19,46 @@ def index(request):
 
 def prod(request):
     query = request.GET.dict()
-    return _success(200, query)
+    asin = query['asin']
+    prod, properties, reviews = parse(asin)
+    return _success(200, {'prod': model_to_dict(prod), 'properties': [model_to_dict(property) for property in properties], 'reviews': [model_to_dict(review) for review in reviews]})
 
 def parse(asin):
-    prod, reviews = ReadAsin(asin)
-
-
-def save_review(query):
-
+    prod_info = parser.ParseReviews(asin)
+    prod, related_properties = save_prod(prod_info)
+    reviews = save_review(prod_info, prod)
+    return prod, related_properties, reviews
 
 def save_prod(query):
+    asin = query['asin']
+    product_name = query['name']
+    try:
+        prod = Product.objects.get(pk=asin)
+        properties = Property.objects.filter(prod=prod)
+    except ObjectDoesNotExist:
+        prod = Product.objects.create(asin=asin, title=product_name)
+        prod.save()
+        properties = save_property(query, prod)
+    return prod, properties
 
+def save_review(query, prod):
+    reviews = query['reviews']
+    saved_reviews = []
+    for review_info in reviews:
+        try:
+            review = Review.objects.get(review_id = review_info['review_id'])
+        except ObjectDoesNotExist:
+            review = Review.objects.create(review_id = review_info['review_id'], content=review_info['review_text'], prod=prod)
+        review.save()
+        saved_reviews.append(review)
+    return saved_reviews
 
-def save_property(query):
+def save_property(query, prod):
+    properties = query['properties']
+    print(properties)
+    saved_properties = []
+    for key, value in properties.items():
+        property = Property.objects.create(xpath = key, prod = prod, text_content = value)
+        property.save()
+        saved_properties.append(property)
+    return saved_properties
