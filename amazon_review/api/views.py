@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from api.models import *
 from django.forms import model_to_dict
-from . import parser
+from . import parser, match
 
 def index(request):
     return HttpResponse('success!\n')
@@ -21,7 +21,8 @@ def prod(request):
     query = request.GET.dict()
     asin = query['asin']
     prod, properties, reviews = parse(asin)
-    return _success(200, {'prod': model_to_dict(prod), 'properties': [model_to_dict(property) for property in properties], 'reviews': [model_to_dict(review) for review in reviews]})
+    ret = match.keyword_match(properties, reviews)
+    return _success(200, ret)
 
 def parse(asin):
     prod_info = parser.ParseReviews(asin)
