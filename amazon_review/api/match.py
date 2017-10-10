@@ -1,9 +1,8 @@
 from api.models import *
 
 def keyword_match(properties, reviews):
-    ret = {}
+    ret = []
     for property in properties:
-        ret[property.xpath] = []
         text = property.text_content;
         print(text)
         property_word = [" " + word.lower() + " " for word in text.split(" ")]
@@ -14,6 +13,5 @@ def keyword_match(properties, reviews):
                 dct[sentence] = sum(1 for word in property_word if word in sentence)
             best_sentences = [key for key,value in dct.items() if value == max(dct.values())]
             if dct[best_sentences[0]] > len(property_word) / 2:
-                print(best_sentences)
-                ret[property.xpath].append({best_sentences[0]: [review.content, review.review_id]})
+                ret.append({'related_property': property, 'best_sentence': best_sentences[0], 'related_review': review})
     return ret

@@ -6,9 +6,11 @@ class Product(models.Model):
     asin = models.CharField(max_length=1024, default='', primary_key=True)
     last_crawl_date = models.DateField(default=datetime.date.today)
 
-# class User(models.Model):
-#     username = models.CharField(max_length=1024, default='')
-#     user_id = models.CharField(max_length=1024, default='', primary_key=True)
+class Relationship(models.Model):
+    related_review = models.ForeignKey('Review', on_delete=models.CASCADE)
+    related_property = models.ForeignKey('Property', on_delete = models.CASCADE)
+    best_sentence = models.CharField(max_length=1023, default='')
+    prod = models.ForeignKey('Product', on_delete=models.CASCADE)
 
 class Review(models.Model):
     content = models.TextField(default='')
