@@ -4,6 +4,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from api.models import *
 from django.forms import model_to_dict
 from . import parser, match
+from celery import shared_task
+
 
 def index(request):
     return HttpResponse('success!\n')
@@ -20,18 +22,22 @@ def index(request):
 def prod(request):
     query = request.GET.dict()
     asin = query['asin']
-    prod, properties, reviews = parse(asin)
-    relationships = match.keyword_match(properties, reviews)
-    save_relationship(relationships, prod)
+    # prod, properties, reviews = parse(asin)
+    parse.delay(asin)
+    # relationships = match.keyword_match(properties, reviews, prod)
+    # save_relationship(relationships, prod)
     ret = find_relationship(asin)
     return _success(200, ret)
 
+@shared_task
 def parse(asin):
     reviews = parser.ParseReviews(asin)
     prod_query = parser.ParseProduct(asin)
     prod, properties = save_prod(prod_query)
     saved_reviews = save_review(reviews, prod)
-    return prod, properties, saved_reviews
+    ret = match.keyword_match(properties, saved_reviews, prod)
+    print(len(ret))
+    return
 
 def find_relationship(prod):
     ret = {}
@@ -43,12 +49,6 @@ def find_relationship(prod):
             review = relationship.related_review
             ret[property.xpath].append({relationship.best_sentence: [review.content, review.review_id]})
     return ret
-
-def save_relationship(relationships, prod):
-    for relation in relationships:
-        relation['prod'] = prod
-        rel = Relationship(**relation)
-        rel.save()
 
 def save_prod(query):
     asin = query['asin']

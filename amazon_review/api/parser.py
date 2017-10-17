@@ -24,7 +24,7 @@ def ParseReviews(asin):
 				# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
 				parser = request_parser(review_page)
 				reviews, count = parse_review_list(parser)
-				if (count == 0 or i == 10):
+				if (count == 0):
 					 return review_list
 				review_list += reviews
 				break

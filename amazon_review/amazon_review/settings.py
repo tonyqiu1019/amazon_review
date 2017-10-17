@@ -22,6 +22,17 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'q4uyn)zwjimw)-#v8+_kgew*g04rkgb-x!mjj#ym&mj!lv%2=$'
 
+CELERY_BROKER_URL = 'amqp://amazon:amazon@localhost:5672/myvhost'
+
+#: Only add pickle to this list if your broker is secured
+#: from unwanted access (see userguide/security.html)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_IMPORTS = ('api.task')
+
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
