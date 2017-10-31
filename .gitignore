@@ -1,4 +1,7 @@
 # Byte-compiled / optimized / DLL files
+# bin
+amazon_review/bin
+
 __pycache__/
 *.py[cod]
 *$py.class
@@ -100,4 +103,9 @@ ENV/
 # mypy
 .mypy_cache/
 
+#sq
+*.sqlite
+
+#sq
+*.sqlite3
 *.DS_Store
