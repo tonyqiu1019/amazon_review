@@ -5,6 +5,7 @@ from api.models import *
 from django.forms import model_to_dict
 from . import parser, match
 from celery import shared_task
+from . import switch
 
 
 def index(request):
@@ -23,8 +24,8 @@ def prod(request):
     query = request.GET.dict()
     asin = query['asin']
     # prod, properties, reviews = parse(asin)
-    parse.delay(asin)
-    # parse(asin)
+    # parse.delay(asin)
+    parse(asin)
     # relationships = match.keyword_match(properties, reviews, prod)
     # save_relationship(relationships, prod)
     ret = find_relationship(asin)
@@ -70,14 +71,15 @@ def save_review(reviews, prod):
             review = Review.objects.get(review_id = review_info['review_id'])
         except ObjectDoesNotExist:
             review = Review.objects.create(review_id = review_info['review_id'], content=review_info['review_text'], prod=prod)
-            saved_reviews.append(review)
+        saved_reviews.append(review)
     return saved_reviews
 
 def save_property(query, prod):
     properties = query['properties']
     saved_properties = []
     for key, value in properties.items():
-        property = Property.objects.create(xpath = key, prod = prod, text_content = value)
+        print(switch.switch(value))
+        property = Property.objects.create(xpath = key, prod = prod, text_content = switch.switch(value))
         property.save()
         saved_properties.append(property)
     return saved_properties
