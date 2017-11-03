@@ -6,6 +6,8 @@ from nltk import tokenize
 from celery import shared_task
 
 def keyword_match(properties, reviews, prod):
+    print(properties)
+    print(reviews)
     sid = SentimentIntensityAnalyzer()
     ret = []
     start_time = time.time()
@@ -28,6 +30,7 @@ def keyword_match(properties, reviews, prod):
 
 def save_relationship(relationships, prod):
     for relation in relationships:
+        print(relation)
         relation['prod'] = prod
         rel = Relationship(**relation)
         rel.save()

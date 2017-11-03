@@ -32,10 +32,15 @@ def prod(request):
 
 @shared_task
 def parse(asin):
+    # print("CNM")
     reviews = parser.ParseReviews(asin)
+    print(reviews)
     prod_query = parser.ParseProduct(asin)
+    # print("prod_query")
     prod, properties = save_prod(prod_query)
+    # print(properties
     saved_reviews = save_review(reviews, prod)
+    print(saved_reviews)
     ret = match.keyword_match(properties, saved_reviews, prod)
     print(len(ret))
     return
@@ -70,7 +75,7 @@ def save_review(reviews, prod):
             review = Review.objects.get(review_id = review_info['review_id'])
         except ObjectDoesNotExist:
             review = Review.objects.create(review_id = review_info['review_id'], content=review_info['review_text'], prod=prod)
-            saved_reviews.append(review)
+        saved_reviews.append(review)
     return saved_reviews
 
 def save_property(query, prod):

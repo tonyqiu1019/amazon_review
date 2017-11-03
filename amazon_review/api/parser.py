@@ -8,6 +8,11 @@ import json,re
 # from dateutil import parser as dateparser
 from time import sleep
 
+def write_html(data, filename='sample.html'):
+    output = open(filename, 'w', encoding='utf-8')
+    output.write(data.content.decode('utf-8'))
+    output.close()
+
 def ReviewURL(asin, page):
 	return "https://www.amazon.com/product-reviews/" + asin + "/ref=cm_cr_arp_d_viewopt_srt?reviewerType=all_reviews&pageNumber=" + str(page) + "&sortBy=recent"
 
@@ -53,6 +58,7 @@ def ParseProduct(asin):
 def request_parser(amazon_url):
 	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) AppleWebKit/601.6.17 (KHTML, like Gecko) Version/9.1.1 Safari/601.6.17'}
 	page = requests.get(amazon_url,headers = headers)
+	write_html(page)
 	page_response = page.text
 	parser = html.fromstring(page_response)
 	return parser
