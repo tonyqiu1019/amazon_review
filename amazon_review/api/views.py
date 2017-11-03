@@ -24,6 +24,7 @@ def prod(request):
     asin = query['asin']
     # prod, properties, reviews = parse(asin)
     parse.delay(asin)
+    # parse(asin)
     # relationships = match.keyword_match(properties, reviews, prod)
     # save_relationship(relationships, prod)
     ret = find_relationship(asin)
@@ -47,7 +48,7 @@ def find_relationship(prod):
         ret[property.xpath] = []
         for relationship in relationships:
             review = relationship.related_review
-            ret[property.xpath].append({relationship.best_sentence: [review.content, review.review_id]})
+            ret[property.xpath].append({relationship.best_sentence: [review.content, review.review_id, relationship.sentiment]})
     return ret
 
 def save_prod(query):
