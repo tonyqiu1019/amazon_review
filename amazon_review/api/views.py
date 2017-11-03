@@ -5,6 +5,7 @@ from api.models import *
 from django.forms import model_to_dict
 from . import parser, match
 from celery import shared_task
+from . import switch
 
 
 def index(request):
@@ -82,7 +83,8 @@ def save_property(query, prod):
     properties = query['properties']
     saved_properties = []
     for key, value in properties.items():
-        property = Property.objects.create(xpath = key, prod = prod, text_content = value)
+        print(switch.switch(value))
+        property = Property.objects.create(xpath = key, prod = prod, text_content = switch.switch(value))
         property.save()
         saved_properties.append(property)
     return saved_properties
