@@ -24,8 +24,8 @@ def prod(request):
     query = request.GET.dict()
     asin = query['asin']
     # prod, properties, reviews = parse(asin)
-    # parse.delay(asin)
-    parse(asin)
+    parse.delay(asin)
+    # parse(asin)
     # relationships = match.keyword_match(properties, reviews, prod)
     # save_relationship(relationships, prod)
     ret = find_relationship(asin)
