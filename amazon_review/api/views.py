@@ -71,14 +71,14 @@ def save_review(reviews, prod):
             review = Review.objects.get(review_id = review_info['review_id'])
         except ObjectDoesNotExist:
             review = Review.objects.create(review_id = review_info['review_id'], content=review_info['review_text'], prod=prod)
-        saved_reviews.append(review)
+            saved_reviews.append(review)
     return saved_reviews
 
 def save_property(query, prod):
     properties = query['properties']
     saved_properties = []
     for key, value in properties.items():
-        print(switch.switch(value))
+        # print(switch.switch(value))
         property = Property.objects.create(xpath = key, prod = prod, text_content = switch.switch(value))
         property.save()
         saved_properties.append(property)

@@ -18,7 +18,7 @@ def keyword_match(properties, reviews, prod):
             for sentence in sentences:
                 dct[sentence] = sum(1 for word in property_word if word in sentence)
             best_sentences = [key for key,value in dct.items() if value == max(dct.values())]
-            if dct[best_sentences[0]] >= 7:
+            if dct[best_sentences[0]] >= 5:
                 ss = sid.polarity_scores(best_sentences[0])['compound']
                 ret.append({'related_property': property, 'best_sentence': best_sentences[0], 'related_review': review, 'sentiment': ss})
     save_relationship(ret, prod)
