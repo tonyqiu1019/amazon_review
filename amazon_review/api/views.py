@@ -24,14 +24,26 @@ def prod(request):
     query = request.GET.dict()
     asin = query['asin']
     # prod, properties, reviews = parse(asin)
-    parse.delay(asin)
-    # parse(asin)
+    # parse.delay(asin)
+    parse(asin)
     # relationships = match.keyword_match(properties, reviews, prod)
     # save_relationship(relationships, prod)
     ret = find_relationship(asin)
     return _success(200, ret)
 
-@shared_task
+def highlight(request):
+    query = request.GET.dict()
+    review_id = query['review']
+    related_review = Review.objects.get(pk=review_id)
+    asin = related_review_review.prod.asin
+    related_prod = Product.objects.get(pk=asin)
+    all_relation = Relationship.objects.filter(related_review=related_review, prod=related_prod)
+    ret_dict = {}
+    for relation in all_relation:
+        ret_dict[relation.best_sentence] = {'property' : relation.related_property.topic, 'sentiment' : relation.sentiment}
+    return _success(200, ret_dict)
+
+# @shared_task
 def parse(asin):
     reviews = parser.ParseReviews(asin)
     prod_query = parser.ParseProduct(asin)
@@ -79,7 +91,7 @@ def save_property(query, prod):
     saved_properties = []
     for key, value in properties.items():
         # print(switch.switch(value))
-        property = Property.objects.create(xpath = key, prod = prod, text_content = switch.switch(value))
+        property = Property.objects.create(xpath = key, prod = prod, text_content = switch.switch(value), topic = value)
         property.save()
         saved_properties.append(property)
     return saved_properties

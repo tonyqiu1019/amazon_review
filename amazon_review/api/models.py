@@ -22,5 +22,5 @@ class Review(models.Model):
 class Property(models.Model):
     prod = models.ForeignKey('Product', on_delete=models.CASCADE)
     xpath = models.CharField(max_length=1024, default='')
-    # related_review = models.ManyToManyField(Review)
+    topic = models.CharField(max_length=1024, default='')
     text_content = models.CharField(max_length=1024, default='')
