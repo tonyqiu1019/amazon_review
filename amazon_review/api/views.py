@@ -35,7 +35,7 @@ def highlight(request):
     query = request.GET.dict()
     review_id = query['review']
     related_review = Review.objects.get(pk=review_id)
-    asin = related_review_review.prod.asin
+    asin = related_review.prod.asin
     related_prod = Product.objects.get(pk=asin)
     all_relation = Relationship.objects.filter(related_review=related_review, prod=related_prod)
     ret_dict = {}
