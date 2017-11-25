@@ -7,7 +7,6 @@ from . import parser, match
 from celery import shared_task
 from . import switch
 
-
 def index(request):
     return HttpResponse('success!\n')
 
@@ -38,24 +37,23 @@ def highlight(request):
     asin = related_review.prod.asin
     related_prod = Product.objects.get(pk=asin)
     all_relation = Relationship.objects.filter(related_review=related_review, prod=related_prod)
-    ret_dict = {}
+    ret_list = []
     for relation in all_relation:
-        ret_dict[relation.best_sentence] = {'property' : relation.related_property.topic, 'sentiment' : relation.sentiment}
-    return _success(200, ret_dict)
+        ret_list.append({'sentence':relation.best_sentence,
+        'property' : relation.related_property.topic,
+        'sentiment' : relation.sentiment})
+    return _success(200, {'content':ret_list})
 
 # @shared_task
 def parse(asin):
-    # print("CNM")
     reviews = parser.ParseReviews(asin)
-    print(reviews)
+    # print(reviews)
     prod_query = parser.ParseProduct(asin)
-    # print("prod_query")
     prod, properties = save_prod(prod_query)
-    # print(properties
     saved_reviews = save_review(reviews, prod)
-    print(saved_reviews)
+    # print(saved_reviews)
     ret = match.keyword_match(properties, saved_reviews, prod)
-    print(len(ret))
+    # print(len(ret))
     return
 
 def find_relationship(prod):

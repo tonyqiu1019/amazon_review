@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Written as part of https://www.scrapehero.com/how-to-scrape-amazon-product-reviews-using-python/
-from lxml import html
+from lxml import html, etree
 import json
 import requests
 import json,re
@@ -58,7 +58,6 @@ def ParseProduct(asin):
 def request_parser(amazon_url):
 	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) AppleWebKit/601.6.17 (KHTML, like Gecko) Version/9.1.1 Safari/601.6.17'}
 	page = requests.get(amazon_url,headers = headers)
-	write_html(page)
 	page_response = page.text
 	parser = html.fromstring(page_response)
 	return parser
@@ -125,13 +124,20 @@ def read_review_block(review):
 	XPATH_RATING  = './/i[@data-hook="review-star-rating"]//text()'
 	XPATH_REVIEW_HEADER = './/a[@data-hook="review-title"]//text()'
 	XPATH_REVIEW_POSTED_DATE = './/a[contains(@href,"/profile/")]/parent::span/following-sibling::span/text()'
-	XPATH_REVIEW_TEXT = './/span[@data-hook="review-body"]//text()'
+	XPATH_REVIEW_TEXT = './/span[@data-hook="review-body"]/text()'
 	XPATH_AUTHOR  = './/a[contains(@href,"/profile/")]/parent::span//text()'
 	raw_review_author = review.xpath(XPATH_AUTHOR)
 	raw_review_rating = review.xpath(XPATH_RATING)
 	raw_review_header = review.xpath(XPATH_REVIEW_HEADER)
 	raw_review_posted_date = review.xpath(XPATH_REVIEW_POSTED_DATE)
 	raw_review_text = review.xpath(XPATH_REVIEW_TEXT)
+    # XPATH_REVIEW_TEXT = './/span[@data-hook="review-body"]/node()'
+    # raw_review_text = review.xpath(XPATH_REVIEW_TEXT)
+	# print(raw_review_text)
+	# for i in range(len(raw_review_text)):
+	# 	print(raw_review_text[i])
+	# 	if not isinstance(raw_review_text[i], str):
+	# 		raw_review_text[i] = '<br>'
 	raw_review_id = review.get('id')
 	author = ' '.join(' '.join(raw_review_author).split()).strip('By').strip()
 
@@ -141,7 +147,7 @@ def read_review_block(review):
 	# print(raw_review_posted_date)
 	# review_posted_date = dateparser.parse(''.join(raw_review_posted_date)).strftime('%d %b %Y')
 	review_text = ' '.join(' '.join(raw_review_text).split())
-
+	# print(review_text)
 	#grabbing hidden comments if present
 	review_dict = {
 						'review_text':review_text,
