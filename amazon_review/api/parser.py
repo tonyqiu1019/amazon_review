@@ -124,20 +124,20 @@ def read_review_block(review):
 	XPATH_RATING  = './/i[@data-hook="review-star-rating"]//text()'
 	XPATH_REVIEW_HEADER = './/a[@data-hook="review-title"]//text()'
 	XPATH_REVIEW_POSTED_DATE = './/a[contains(@href,"/profile/")]/parent::span/following-sibling::span/text()'
-	XPATH_REVIEW_TEXT = './/span[@data-hook="review-body"]/text()'
+	XPATH_REVIEW_TEXT = './/span[@data-hook="review-body"]/node()'
 	XPATH_AUTHOR  = './/a[contains(@href,"/profile/")]/parent::span//text()'
 	raw_review_author = review.xpath(XPATH_AUTHOR)
 	raw_review_rating = review.xpath(XPATH_RATING)
 	raw_review_header = review.xpath(XPATH_REVIEW_HEADER)
 	raw_review_posted_date = review.xpath(XPATH_REVIEW_POSTED_DATE)
-	raw_review_text = review.xpath(XPATH_REVIEW_TEXT)
-    # XPATH_REVIEW_TEXT = './/span[@data-hook="review-body"]/node()'
-    # raw_review_text = review.xpath(XPATH_REVIEW_TEXT)
-	# print(raw_review_text)
-	# for i in range(len(raw_review_text)):
-	# 	print(raw_review_text[i])
-	# 	if not isinstance(raw_review_text[i], str):
-	# 		raw_review_text[i] = '<br>'
+	# raw_review_text = review.xpath('.//span[@data-hook="review-body"]/text()')
+
+	raw_html_review_text = review.xpath(XPATH_REVIEW_TEXT)
+	raw_review_text = []
+	for i in range(len(raw_html_review_text)):
+		if isinstance(raw_html_review_text[i], str):
+			raw_review_text.append(raw_html_review_text[i])
+	print(raw_review_text)
 	raw_review_id = review.get('id')
 	author = ' '.join(' '.join(raw_review_author).split()).strip('By').strip()
 
