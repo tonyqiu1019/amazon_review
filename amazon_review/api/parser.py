@@ -137,7 +137,10 @@ def read_review_block(review):
 	for i in range(len(raw_html_review_text)):
 		if isinstance(raw_html_review_text[i], str):
 			raw_review_text.append(raw_html_review_text[i])
-	print(raw_review_text)
+		elif len(raw_review_text) > 0:
+			if not raw_review_text[-1].endswith('.'):
+				raw_review_text[-1] += '.'
+	# print(raw_review_text)
 	raw_review_id = review.get('id')
 	author = ' '.join(' '.join(raw_review_author).split()).strip('By').strip()
 
