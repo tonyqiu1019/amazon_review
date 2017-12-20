@@ -15,7 +15,8 @@ def keyword_match(properties, reviews, prod):
         text = property.text_content;
         property_word = [" " + word.lower() + " " for word in text.split(" ")]
         for review in reviews:
-            sentences = tokenize.sent_tokenize(review)
+            if not isinstance(review.content, str): continue
+            sentences = tokenize.sent_tokenize(review.content)
             print(sentences)
             dct = {}
             maxCount = 0
