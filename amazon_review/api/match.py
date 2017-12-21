@@ -17,7 +17,7 @@ def keyword_match(properties, reviews, prod):
         for review in reviews:
             if not isinstance(review.content, str): continue
             sentences = tokenize.sent_tokenize(review.content)
-            print(sentences)
+            # print(sentences)
             dct = {}
             maxCount = 0
             best_sentence = ''
@@ -26,7 +26,7 @@ def keyword_match(properties, reviews, prod):
                 if count > maxCount:
                     maxCount = count
                     best_sentence = sentences[i]
-            if maxCount >= 2:
+            if maxCount >= 3:
                 ss = sid.polarity_scores(best_sentence.lower())['compound']
                 ret.append({'related_property': property, 'best_sentence': best_sentence, 'related_review': review, 'sentiment': ss})
     save_relationship(ret, prod)
