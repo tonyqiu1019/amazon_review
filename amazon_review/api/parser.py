@@ -9,9 +9,8 @@ import json,re
 from time import sleep
 
 def write_html(data, filename='sample.html'):
-    output = open(filename, 'w', encoding='utf-8')
-    output.write(data.content.decode('utf-8'))
-    output.close()
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(data.content.decode('utf-8'))
 
 def ReviewURL(asin, page):
 	return "https://www.amazon.com/product-reviews/" + asin + "/ref=cm_cr_arp_d_viewopt_srt?reviewerType=all_reviews&pageNumber=" + str(page) + "&sortBy=recent"
@@ -56,8 +55,9 @@ def ParseProduct(asin):
 
 
 def request_parser(amazon_url):
-	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) AppleWebKit/601.6.17 (KHTML, like Gecko) Version/9.1.1 Safari/601.6.17'}
+	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
 	page = requests.get(amazon_url,headers = headers)
+	write_html(page)
 	page_response = page.text
 	parser = html.fromstring(page_response)
 	return parser
@@ -85,15 +85,16 @@ def parse_general(parser):
 	# 			ratings_dict.update({rating_key:rating_value})
 
 def parse_property(parser):
-	XPATH_PRODUCT_TABLE_1 = '(//table[@id="productDetails_techSpec_section_1"]/tbody/tr/th)'
-	XPATH_PRODUCT_TABLE_2 =	'(//table[@id="productDetails_techSpec_section_2"]/tbody/tr/th)'
-	product_table_1 = parser.xpath(XPATH_PRODUCT_TABLE_1)
-	product_table_2 = parser.xpath(XPATH_PRODUCT_TABLE_2)
+	XPATH_PRODUCT_TABLE_1 = '(//table[@id="productDetails_techSpec_section_1"]'
+	XPATH_PRODUCT_TABLE_2 =	'(//table[@id="productDetails_techSpec_section_2"]'
+	product_table_1 = parser.xpath(XPATH_PRODUCT_TABLE_1+'//th)')
+	product_table_2 = parser.xpath(XPATH_PRODUCT_TABLE_2+'//th)')
 	property_dict = {}
 	for count, element in enumerate(product_table_1):
-		property_dict[XPATH_PRODUCT_TABLE_1 + "[%d]"%(count + 1)] = element.xpath('./text()')[0].strip()
+		property_dict[XPATH_PRODUCT_TABLE_1+'/tbody/tr/th)' + "[%d]"%(count + 1)] = element.xpath('./text()')[0].strip()
 	for count, element in enumerate(product_table_2):
-		property_dict[XPATH_PRODUCT_TABLE_2 + "[%d]"%(count + 1)] = element.xpath('./text()')[0].strip()
+		property_dict[XPATH_PRODUCT_TABLE_2+'/tbody/tr/th)' + "[%d]"%(count + 1)] = element.xpath('./text()')[0].strip()
+	print(property_dict)
 	return property_dict
 
 def parse_review(parser):
