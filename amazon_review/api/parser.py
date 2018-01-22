@@ -57,7 +57,7 @@ def ParseProduct(asin):
 def request_parser(amazon_url):
 	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
 	page = requests.get(amazon_url,headers = headers)
-	write_html(page)
+	# write_html(page)
 	page_response = page.text
 	parser = html.fromstring(page_response)
 	return parser
@@ -94,7 +94,7 @@ def parse_property(parser):
 		property_dict[XPATH_PRODUCT_TABLE_1+'/tbody/tr/th)' + "[%d]"%(count + 1)] = element.xpath('./text()')[0].strip()
 	for count, element in enumerate(product_table_2):
 		property_dict[XPATH_PRODUCT_TABLE_2+'/tbody/tr/th)' + "[%d]"%(count + 1)] = element.xpath('./text()')[0].strip()
-	print(property_dict)
+	# print(property_dict)
 	return property_dict
 
 def parse_review(parser):
