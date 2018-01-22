@@ -85,8 +85,8 @@ def parse_general(parser):
 	# 			ratings_dict.update({rating_key:rating_value})
 
 def parse_property(parser):
-	XPATH_PRODUCT_TABLE_1 = '(//table[@id="productDetails_techSpec_section_1"]//th)'
-	XPATH_PRODUCT_TABLE_2 =	'(//table[@id="productDetails_techSpec_section_2"]//th)'
+	XPATH_PRODUCT_TABLE_1 = '(//table[@id="productDetails_techSpec_section_1"]/tbody/tr/th)'
+	XPATH_PRODUCT_TABLE_2 =	'(//table[@id="productDetails_techSpec_section_2"]/tbody/tr/th)'
 	product_table_1 = parser.xpath(XPATH_PRODUCT_TABLE_1)
 	product_table_2 = parser.xpath(XPATH_PRODUCT_TABLE_2)
 	property_dict = {}
