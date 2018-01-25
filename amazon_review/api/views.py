@@ -21,11 +21,8 @@ def index(request):
 def prod(request):
     query = request.GET.dict()
     asin = query['asin']
-    # prod, properties, reviews = parse(asin)
     # parse.delay(asin)
     parse(asin)
-    # relationships = match.keyword_match(properties, reviews, prod)
-    # save_relationship(relationships, prod)
     ret = find_relationship(asin)
     return _success(200, ret)
 
@@ -40,6 +37,18 @@ def parse(asin):
     ret = matcher.keyword_match(properties, saved_reviews, prod)
     # print(len(ret))
     return
+
+def click(request):
+    query = request.GET.dict()
+    relationship_id = query['relationship_id']
+    try:
+        relationship = Relationship.objects.get(pk=relationship_id)
+        relationship.clicked += 1
+        relationship.save()
+        return _success(200, model_to_dict(relationship))
+    except ObjectDoesNotExist:
+        return _fail(404, "Relationship not found")
+
 
 def find_relationship(prod):
     ret = {}
