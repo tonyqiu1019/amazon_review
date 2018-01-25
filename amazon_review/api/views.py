@@ -29,20 +29,6 @@ def prod(request):
     ret = find_relationship(asin)
     return _success(200, ret)
 
-def highlight(request):
-    query = request.GET.dict()
-    review_id = query['review']
-    related_review = Review.objects.get(pk=review_id)
-    asin = related_review.prod.asin
-    related_prod = Product.objects.get(pk=asin)
-    all_relation = Relationship.objects.filter(related_review=related_review, prod=related_prod)
-    ret_list = []
-    for relation in all_relation:
-        ret_list.append({'sentence':relation.best_sentence,
-        'property' : relation.related_property.topic,
-        'sentiment' : relation.sentiment})
-    return _success(200, {'content':ret_list})
-
 # @shared_task
 def parse(asin):
     reviews = parser.ParseReviews(asin)
@@ -61,9 +47,6 @@ def find_relationship(prod):
     for property in related_properties:
         relationships = Relationship.objects.filter(prod = prod, related_property = property)
         ret[property.xpath] = ranker.rank(relationships)
-        # for relationship in relationships:
-        #     review = relationship.related_review
-        #     ret[property.xpath].append({relationship.best_sentence: [review.content, review.review_id, relationship.sentiment]})
     return ret
 
 def save_prod(query):
@@ -97,3 +80,18 @@ def save_property(query, prod):
         property.save()
         saved_properties.append(property)
     return saved_properties
+
+####Deprecated####
+# def highlight(request):
+#     query = request.GET.dict()
+#     review_id = query['review']
+#     related_review = Review.objects.get(pk=review_id)
+#     asin = related_review.prod.asin
+#     related_prod = Product.objects.get(pk=asin)
+#     all_relation = Relationship.objects.filter(related_review=related_review, prod=related_prod)
+#     ret_list = []
+#     for relation in all_relation:
+#         ret_list.append({'sentence':relation.best_sentence,
+#         'property' : relation.related_property.topic,
+#         'sentiment' : relation.sentiment})
+#     return _success(200, {'content':ret_list})
