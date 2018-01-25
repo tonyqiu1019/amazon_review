@@ -3,9 +3,8 @@ from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from api.models import *
 from django.forms import model_to_dict
-from . import parser, match
+from . import parser, matcher, switcher, ranker
 from celery import shared_task
-from . import switch
 
 def index(request):
     return HttpResponse('success!\n')
@@ -52,7 +51,7 @@ def parse(asin):
     prod, properties = save_prod(prod_query)
     saved_reviews = save_review(reviews, prod)
     # print(saved_reviews)
-    ret = match.keyword_match(properties, saved_reviews, prod)
+    ret = matcher.keyword_match(properties, saved_reviews, prod)
     # print(len(ret))
     return
 
@@ -61,10 +60,10 @@ def find_relationship(prod):
     related_properties = Property.objects.filter(prod = prod)
     for property in related_properties:
         relationships = Relationship.objects.filter(prod = prod, related_property = property)
-        ret[property.xpath] = []
-        for relationship in relationships:
-            review = relationship.related_review
-            ret[property.xpath].append({relationship.best_sentence: [review.content, review.review_id, relationship.sentiment]})
+        ret[property.xpath] = ranker.rank(relationships)
+        # for relationship in relationships:
+        #     review = relationship.related_review
+        #     ret[property.xpath].append({relationship.best_sentence: [review.content, review.review_id, relationship.sentiment]})
     return ret
 
 def save_prod(query):
@@ -94,7 +93,7 @@ def save_property(query, prod):
     saved_properties = []
     for key, value in properties.items():
         # print(switch.switch(value))
-        property = Property.objects.create(xpath = key, prod = prod, text_content = switch.switch(value), topic = value)
+        property = Property.objects.create(xpath = key, prod = prod, text_content = switcher.switch(value), topic = value)
         property.save()
         saved_properties.append(property)
     return saved_properties
