@@ -40,7 +40,7 @@ def parse(asin):
 
 def click(request):
     query = request.GET.dict()
-    relationship_id = query['relationship_id']
+    relationship_id = query['id']
     try:
         relationship = Relationship.objects.get(pk=relationship_id)
         relationship.clicked += 1
