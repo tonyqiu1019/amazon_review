@@ -22,7 +22,7 @@ def prod(request):
     query = request.GET.dict()
     asin = query['asin']
     parse.delay(asin)
-    parse(asin)
+#    parse(asin)
     ret = find_relationship(asin)
     return _success(200, ret)
 
