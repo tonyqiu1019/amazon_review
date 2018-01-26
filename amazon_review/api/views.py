@@ -21,12 +21,12 @@ def index(request):
 def prod(request):
     query = request.GET.dict()
     asin = query['asin']
-    parse.delay(asin)
+    # parse.delay(asin)
     parse(asin)
     ret = find_relationship(asin)
     return _success(200, ret)
 
-@shared_task
+# @shared_task
 def parse(asin):
     reviews = parser.ParseReviews(asin)
     # print(reviews)
