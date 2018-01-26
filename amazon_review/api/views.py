@@ -49,6 +49,20 @@ def click(request):
     except ObjectDoesNotExist:
         return _fail(404, "Relationship not found")
 
+def rate(request):
+    query = request.GET.dict()
+    relationship_id = query['id']
+    score = query['rating']
+    try:
+        relationship = Relationship.objects.get(pk=relationship_id)
+        relationship.rating_sum += rating
+        relationship.rating_count += 1
+        relationship.rating = relationship.rating_sum/relationship.rating_count
+        relationship.save()
+        return _success(200, model_to_dict(relationship))
+    except ObjectDoesNotExist:
+        return _fail(404, "Relationship not found")
+
 
 def find_relationship(prod):
     ret = {}

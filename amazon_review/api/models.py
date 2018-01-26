@@ -18,6 +18,9 @@ class Relationship(models.Model):
     prod = models.ForeignKey('Product', on_delete=models.CASCADE)
     sentiment = models.FloatField(default=0.0)
     clicked = models.IntegerField(default=0)
+    rating_sum = models.IntegerField(default=0)
+    rating_count = models.IntegerField(default=0)
+    rating = models.FloatField(default=0.0)
     rank = models.FloatField(default=0.0)
 
     def __str__(self):
