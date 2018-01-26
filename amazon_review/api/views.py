@@ -55,7 +55,7 @@ def rate(request):
     score = query['rating']
     try:
         relationship = Relationship.objects.get(pk=relationship_id)
-        relationship.rating_sum += rating
+        relationship.rating_sum += score
         relationship.rating_count += 1
         relationship.rating = relationship.rating_sum/relationship.rating_count
         relationship.save()
