@@ -1,7 +1,7 @@
 # Byte-compiled / optimized / DLL files
 # bin
 amazon_review/bin
-amazon_review/amazon_review/api/migrations
+amazon_review/api/migrations/
 __pycache__/
 *.py[cod]
 *$py.class

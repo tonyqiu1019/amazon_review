@@ -13,7 +13,7 @@ class Product(models.Model):
 
 class Relationship(models.Model):
     related_review = models.ForeignKey('Review', on_delete=models.CASCADE)
-    related_property = models.ForeignKey('Property', on_delete = models.CASCADE)
+    related_property = models.ForeignKey('Property', on_delete=models.CASCADE)
     best_sentence = models.CharField(max_length=1023, default='')
     prod = models.ForeignKey('Product', on_delete=models.CASCADE)
     sentiment = models.FloatField(default=0.0)
@@ -31,6 +31,9 @@ class Review(models.Model):
     prod = models.ForeignKey('Product', on_delete=models.CASCADE)
     # user = models.ForeignKey('User', on_delete=models.CASCADE)
     review_id = models.CharField(max_length=1024, primary_key=True)
+
+    # added by concurrency logic
+    page = models.IntegerField(default=0)
 
     def __str__(self):
         return str(model_to_dict(self))

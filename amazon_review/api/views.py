@@ -1,10 +1,17 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
-from api.models import *
 from django.forms import model_to_dict
+
+from celery import shared_task, current_task, uuid
+from celery.result import AsyncResult
+
+from api.models import *
+from api.tasks import *
 from . import parser, matcher, switcher, ranker
-from celery import shared_task
+
+import time
+
 
 def index(request):
     return HttpResponse('success!\n')
@@ -15,28 +22,64 @@ def _success(stat, data):
 def _fail(stat, error_msg):
     return JsonResponse({ 'stat': stat, 'error': error_msg })
 
-def index(request):
-    return HttpResponse("Hello World!")
 
+# new version of prod() includes async logic
 def prod(request):
-    query = request.GET.dict()
-    asin = query['asin']
-    # parse.delay(asin)
-    parse(asin)
-    ret = find_relationship(asin)
-    return _success(200, ret)
+    start_t = time.time()
 
-# @shared_task
-def parse(asin):
-    reviews = parser.ParseReviews(asin)
-    # print(reviews)
-    prod_query = parser.ParseProduct(asin)
-    prod, properties = save_prod(prod_query)
-    saved_reviews = save_review(reviews, prod)
-    # print(saved_reviews)
-    ret = matcher.keyword_match(properties, saved_reviews, prod)
-    # print(len(ret))
-    return
+    query = request.GET.dict()
+    asin = query["asin"]
+    start = int(query["start"]) if "start" in query else 0
+    cnt = int(query["count"]) if "count" in query else 2**31-1
+
+    # if product has already been crawled, then omit crawling again
+    prod = None; properties = []
+    try:
+        prod = Product.objects.get(pk=asin)
+        properties = list(Property.objects.filter(prod=prod))
+    except ObjectDoesNotExist:
+        prod_query = parser.ParseProduct(asin)
+        prod, properties = save_prod(prod_query)
+
+    # measure time until crawling product
+    print("until product: ", time.time() - start_t)
+
+    # query celery task queue for the crwaler process
+    # "PENDING" is default state for unknown tasks
+    # so if "PENDING", means this "asin" has not been crawled
+    # otherwise, the status would be "PROGRESS" or "SUCCESS"
+    res = AsyncResult(asin)
+    if res.state == "PENDING":
+        parse_async.apply_async((asin,), task_id=asin)
+
+    # celery task keeps track of which page it has reached so far
+    # wait until the desginated ending page number has been reached
+    # if the crawler was called before, this while loop won't execute
+    while res.state != "SUCCESS":
+        if res.info and res.info["page"] >= start+cnt: break
+        # avoid querying task queue database too frequently
+        time.sleep(0.1)
+        print("inside while loop")
+
+    # measure time until the (blocking) wait expires
+    print("until not blocking: ", time.time() - start_t)
+
+    # has_more denotes whether there are more reviews
+    # it equals false only if the following two conditions hold:
+    # 1) there are no more relationships after the ending page,
+    # 2) the crawler has already terminated
+    more_rels = Relationship.objects.filter(
+        prod=prod,
+        related_review__page__gte=start+cnt,
+    )
+    has_more = (len(more_rels) > 0) or (res.state == "PROGRESS")
+
+    # find relationshop has been rewritten for purpose of pagination
+    data = find_relationship(prod, start, cnt)
+
+    print("total: ", time.time() - start_t)
+
+    return _success(200, {"has_more": has_more, **data})
 
 def click(request):
     query = request.GET.dict()
@@ -64,20 +107,13 @@ def rate(request):
         return _fail(404, "Relationship not found")
 
 
-def find_relationship(prod):
-    ret = {}
-    related_properties = Property.objects.filter(prod = prod)
-    for property in related_properties:
-        relationships = Relationship.objects.filter(prod = prod, related_property = property)
-        ret[property.xpath] = ranker.rank(relationships)
-    return ret
-
+# private implementations
 def save_prod(query):
     asin = query['asin']
     product_name = query['name']
     try:
         prod = Product.objects.get(pk=asin)
-        properties = Property.objects.filter(prod=prod)
+        properties = list(Property.objects.filter(prod=prod))
     except ObjectDoesNotExist:
         prod = Product.objects.create(asin=asin, title=product_name)
         prod.save()
@@ -103,6 +139,19 @@ def save_property(query, prod):
         property.save()
         saved_properties.append(property)
     return saved_properties
+
+def find_relationship(prod, start, cnt):
+    ret = {}
+    related_properties = Property.objects.filter(prod = prod)
+    for rp in related_properties:
+        relationships = Relationship.objects.filter(
+            prod=prod,
+            related_property=rp,
+            related_review__page__gte=start,
+            related_review__page__lt=start+cnt,
+        )
+        ret[rp.xpath] = ranker.rank(relationships)
+    return ret
 
 ####Deprecated####
 # def highlight(request):

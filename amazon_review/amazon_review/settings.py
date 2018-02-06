@@ -29,8 +29,7 @@ CELERY_BROKER_URL = 'amqp://amazon:amazon@localhost:5672/myvhost'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_IMPORTS = ('api.task')
-
+CELERY_IMPORTS = ('api.tasks')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
