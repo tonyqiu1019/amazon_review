@@ -30,9 +30,9 @@ def keyword_match(properties, reviews, prod):
                 ss = sid.polarity_scores(best_sentence.lower())['compound']
                 ret.append({'related_property': property, 'best_sentence': best_sentence, 'related_review': review, 'sentiment': ss})
     save_relationship(ret, prod)
-    elapsed_time = time.time() - start_time
-    print(elapsed_time)
-    return ret;
+    # elapsed_time = time.time() - start_time
+    # print(elapsed_time)
+    return ret
 
 def save_relationship(relationships, prod):
     for relation in relationships:
