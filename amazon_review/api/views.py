@@ -10,6 +10,7 @@ from api.models import *
 from api.tasks import *
 from . import parser, matcher, switcher, ranker
 
+from datetime import date, timedelta
 import time
 
 
@@ -44,22 +45,28 @@ def prod(request):
     # measure time until crawling product
     print("until product: ", time.time() - start_t)
 
-    # query celery task queue for the crwaler process
+    # if the last crawl date is older than a week, then crawl again
+    res = AsyncResult(asin)
+    if date.today() - prod.last_crawl_date > timedelta(7):
+        if res.state == "SUCCESS": res.forget()
+
+    # query celery task queue for the crawler process
     # "PENDING" is default state for unknown tasks
     # so if "PENDING", means this "asin" has not been crawled
     # otherwise, the status would be "PROGRESS" or "SUCCESS"
-    res = AsyncResult(asin)
     if res.state == "PENDING":
+        prod.last_crawl_date = date.today()
         parse_async.apply_async((asin,), task_id=asin)
 
     # celery task keeps track of which page it has reached so far
     # wait until the desginated ending page number has been reached
     # if the crawler was called before, this while loop won't execute
     while res.state != "SUCCESS":
-        if res.info and res.info["page"] >= start+cnt: break
+        if res.info is None: continue
+        if res.info["page"] >= start+cnt: break
         # avoid querying task queue database too frequently
         time.sleep(0.1)
-        print("inside while loop")
+        # print("inside while loop")
 
     # measure time until the (blocking) wait expires
     print("until not blocking: ", time.time() - start_t)
@@ -78,8 +85,8 @@ def prod(request):
     data = find_relationship(prod, start, cnt)
 
     print("total: ", time.time() - start_t)
-
     return _success(200, {"has_more": has_more, **data})
+
 
 def click(request):
     query = request.GET.dict()
