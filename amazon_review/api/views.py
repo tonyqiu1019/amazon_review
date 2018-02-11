@@ -62,8 +62,11 @@ def prod(request):
     # wait until the desginated ending page number has been reached
     # if the crawler was called before, this while loop won't execute
     while res.state != "SUCCESS":
-        if res.info is None: continue
-        if res.info["page"] >= start+cnt: break
+        # if res.info is None: continue
+        try:
+            if res.info["page"] >= start+cnt: break
+        except:
+            continue
         # avoid querying task queue database too frequently
         time.sleep(0.1)
         # print("inside while loop")

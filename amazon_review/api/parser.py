@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 # Written as part of https://www.scrapehero.com/how-to-scrape-amazon-product-reviews-using-python/
 from lxml import html, etree
-import json
 import requests
 import json,re
 # from dateutil import parser as dateparser
 from time import sleep
+
+import random
 
 def write_html(data, filename='sample.html'):
     with open(filename, 'w', encoding='utf-8') as f:
@@ -55,9 +56,16 @@ def ParseProduct(asin):
 
 
 def request_parser(amazon_url):
-	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
-	page = requests.get(amazon_url,headers = headers)
-	# write_html(page)
+	headers = [
+		{'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'},
+		{'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:58.0) Gecko/20100101 Firefox/58.0'},
+		{'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36'},
+		{'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/13.10586'},
+		{'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64, x64; Trident/7.0; rv:11.0) like Gecko'},
+	]
+	idx = random.randint(0, len(headers)-1)
+	page = requests.get(amazon_url,headers = headers[idx])
+	write_html(page, "/af12/jw7jb/public_html/test.html")
 	page_response = page.text
 	parser = html.fromstring(page_response)
 	return parser

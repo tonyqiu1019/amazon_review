@@ -29,6 +29,8 @@ def parse_async(asin):
                 review_page = parser.ReviewURL(asin, pc)
                 rp = parser.request_parser(review_page)
                 reviews, count = parser.parse_review_list(rp)
+                
+                print("asin: %s, page: %d, review count: %d" % (asin,pc,count))
 
                 if count == 0: return
 
