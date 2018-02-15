@@ -6,12 +6,7 @@ import requests
 import json,re
 # from dateutil import parser as dateparser
 from time import sleep
-
-import random
-
-def write_html(data, filename='sample.html'):
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(data.content.decode('utf-8'))
+from utils import select_proxies, select_headers, write_html
 
 def ReviewURL(asin, page):
 	return "https://www.amazon.com/product-reviews/" + asin + "/ref=cm_cr_arp_d_viewopt_srt?reviewerType=all_reviews&pageNumber=" + str(page) + "&sortBy=recent"
@@ -41,7 +36,7 @@ def ParseProduct(asin):
 	for i in range(5):
 		try:
 			#This script has only been tested with Amazon.com
-			amazon_url  = 'http://www.amazon.com/dp/'+asin
+			amazon_url  = 'https://www.amazon.com/dp/'+asin
 			# Add some recent user agent to prevent amazon from blocking the request
 			# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
 			parser = request_parser(amazon_url)
@@ -56,15 +51,7 @@ def ParseProduct(asin):
 
 
 def request_parser(amazon_url):
-	headers = [
-		{'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'},
-		{'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:58.0) Gecko/20100101 Firefox/58.0'},
-		{'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36'},
-		{'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/13.10586'},
-		{'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64, x64; Trident/7.0; rv:11.0) like Gecko'},
-	]
-	idx = random.randint(0, len(headers)-1)
-	page = requests.get(amazon_url,headers = headers[idx])
+	page = requests.get(amazon_url,headers = select_headers(), proxy=select_headers())
 	write_html(page, "/af12/jw7jb/public_html/test.html")
 	page_response = page.text
 	parser = html.fromstring(page_response)
@@ -174,7 +161,7 @@ def read_review_block(review):
 def ReadAsin(asin):
 	#Add your own ASINs here
 	extracted_data = []
-	print("Downloading and processing page http://www.amazon.com/dp/"+asin)
+	print("Downloading and processing page https://www.amazon.com/dp/"+asin)
 	extracted_data.append(ParseReviews(asin))
 	return extracted_data
 

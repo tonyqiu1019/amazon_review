@@ -109,3 +109,6 @@ ENV/
 #sq
 *.sqlite3
 *.DS_Store
+
+#credential
+**/credential.py
