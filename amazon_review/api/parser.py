@@ -6,7 +6,7 @@ import requests
 import json,re
 # from dateutil import parser as dateparser
 from time import sleep
-from utils import request
+from utils import load_html
 
 def ReviewURL(asin, page):
 	return "https://www.amazon.com/product-reviews/" + asin + "/ref=cm_cr_arp_d_viewopt_srt?reviewerType=all_reviews&pageNumber=" + str(page) + "&sortBy=recent"
@@ -23,7 +23,7 @@ def ParseReviews(asin):
 				# Add some recent user agent to prevent amazon from blocking the request
 				# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
                 review_page = load_html(review_url)
-				parser = request(review_page)
+				parser = html.fromstring(review_page)
 				reviews, count = parse_review_list(parser)
 				if (count == 0):
 					 return review_list
@@ -40,7 +40,7 @@ def ParseProduct(asin):
 			amazon_url  = 'https://www.amazon.com/dp/'+asin
 			# Add some recent user agent to prevent amazon from blocking the request
 			# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
-            page_response = request(amazon_url)
+            page_response = load_html(amazon_url)
 			parser = html.fromstring(page_response)
 			general_info = parse_general(parser)
 			property_dict = parse_property(parser)
