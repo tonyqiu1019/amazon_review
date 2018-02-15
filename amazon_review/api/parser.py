@@ -51,7 +51,7 @@ def ParseProduct(asin):
 
 
 def request_parser(amazon_url):
-	page = requests.get(amazon_url,headers = select_headers(), proxies=select_headers())
+	page = requests.get(amazon_url,headers = select_headers(), proxies=select_proxies())
 	write_html(page, "/af12/jw7jb/public_html/test.html")
 	page_response = page.text
 	parser = html.fromstring(page_response)
