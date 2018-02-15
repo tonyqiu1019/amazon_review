@@ -17,10 +17,11 @@ def request_parser(url, asin=None, page_count=None):
 	return parser
 
 def is_blocked(parser):
-    title = parser.xpath('//title/text()')
-    return title == 'Robot Check'
+	title = parser.xpath('//title/text()')
+	print(title)
+	return title == 'Robot Check'
 	# XPATH_CAPTCHA = '//form[@action="/errors/validateCaptcha"]'
-    # has_captcha_form = parser.xpath(XPATH_CAPTCHA)
+	# has_captcha_form = parser.xpath(XPATH_CAPTCHA)
 
 
 def ParseReviews(asin):
@@ -38,7 +39,7 @@ def ParseReviews(asin):
 				while(is_blocked(parser)):
 					parser = request_parser(review_url, asin, str(page_count))
 
-                reviews, count = parse_review_list(parser)
+				reviews, count = parse_review_list(parser)
 				if (count == 0):
 					 return review_list
 				review_list += reviews
