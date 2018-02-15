@@ -15,21 +15,19 @@ def write_html(data, filename='sample.html'):
 
 def select_headers():
 	idx = random.randint(0, len(headers)-1)
-	return headers[idx]
+	return headers[idx], idx
 
 def select_proxies():
 	idx = random.randint(0, len(proxies)-1)
-	return proxies[idx]
+	return proxies[idx], idx
 
-def load_html(url):
-	header = select_headers()
-	proxy = select_proxies()
-	filename = str(uuid.uuid1())
+def load_html(url, asin, pageid):
+	header, hid = select_headers()
+	proxy, pid = select_proxies()
 	page = requests.get(url, headers = header, proxies=proxy)
 
+	filename = str("%s_%s_%s_%s"%(asin, pageid, str(hid), str(pid)))
 	write_html(page, "/af12/jw7jb/public_html/%s.html"%(filename))
-	with open("/af12/jw7jb/public_html/proxy_log.txt", 'a', encoding='utf-8') as f:
-		f.write("%s\n %s\n %s\n %s\n"%(filename, url, header['User-Agent'], proxy['https']))
 
 	page_response = page.text
 	return page_response
