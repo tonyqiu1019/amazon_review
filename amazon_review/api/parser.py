@@ -109,7 +109,7 @@ def parse_review(parser):
 def parse_review_list(parser):
 	XPATH_REVIEW_SECTION = '//div[@data-hook="review"]'
 	reviews = parser.xpath(XPATH_REVIEW_SECTION)
-	count = len(reviews);
+	count = len(reviews)
 	reviews_list = []
 	for review in reviews:
 		review_dict = read_review_block(review)

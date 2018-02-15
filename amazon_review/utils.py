@@ -15,10 +15,8 @@ def write_html(data, filename='sample.html'):
 
 def select_headers():
 	idx = random.randint(0, len(headers)-1)
-    print(headers[idx])
 	return headers[idx]
 
 def select_proxies():
 	idx = random.randint(0, len(proxies)-1)
-    print(proxies[idx])
 	return proxies[idx]
