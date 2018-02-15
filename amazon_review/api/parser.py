@@ -12,9 +12,16 @@ def ReviewURL(asin, page):
 	return "https://www.amazon.com/product-reviews/" + asin + "/ref=cm_cr_arp_d_viewopt_srt?reviewerType=all_reviews&pageNumber=" + str(page) + "&sortBy=recent"
 
 def request_parser(url, asin=None, page_count=None):
-	html_page = load_html(review_url, asin, page_count)
-	parser = html.fromstring(review_page)
+	html_page = load_html(url, asin, page_count)
+	parser = html.fromstring(html_page)
 	return parser
+
+def is_blocked(parser):
+    title = parser.xpath('//title/text()')
+    return title == 'Robot Check'
+	# XPATH_CAPTCHA = '//form[@action="/errors/validateCaptcha"]'
+    # has_captcha_form = parser.xpath(XPATH_CAPTCHA)
+
 
 def ParseReviews(asin):
 	# Added Retrying
@@ -28,7 +35,10 @@ def ParseReviews(asin):
 				# Add some recent user agent to prevent amazon from blocking the request
 				# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
 				parser = request_parser(review_url, asin, str(page_count))
-				reviews, count = parse_review_list(parser)
+				while(is_blocked(parser)):
+					parser = request_parser(review_url, asin, str(page_count))
+
+                reviews, count = parse_review_list(parser)
 				if (count == 0):
 					 return review_list
 				review_list += reviews

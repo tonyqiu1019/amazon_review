@@ -1,4 +1,4 @@
-import requests, random, uuid
+import requests, random
 from credential import proxies
 
 headers = [
@@ -31,3 +31,7 @@ def load_html(url, asin, pageid):
 
 	page_response = page.text
 	return page_response
+
+if __name__ == '__main__':
+	print(select_headers())
+	print(select_headers())
