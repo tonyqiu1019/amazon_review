@@ -27,7 +27,7 @@ def load_html(url):
 	filename = str(uuid.uuid1())
 	page = requests.get(url, headers = header, proxies=proxy)
 
-	write_html(page, "/af12/jw7jb/public_html/%s.html", filename)
+	write_html(page, "/af12/jw7jb/public_html/%s.html"%(filename))
 	with open("/af12/jw7jb/public_html/proxy_log.txt", 'a', encoding='utf-8') as f:
 		f.write("%s\n %s\n %s\n", filename, url, header, proxy)
 
