@@ -55,7 +55,8 @@ def worker(asin, pc):
                 matcher.keyword_match(properties, saved_reviews, prod)
             res_cnt = count; break
 
-        except ValueError:
+        except ValueError as e:
+            print(e)
             print("Retrying to get the correct response")
 
     return res_cnt
