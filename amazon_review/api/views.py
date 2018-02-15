@@ -30,7 +30,7 @@ def prod(request):
 
     query = request.GET.dict()
     asin = query["asin"]
-    start = int(query["start"]) if "start" in query else 0
+    start = int(query["start"]) if "start" in query else 1
     cnt = int(query["count"]) if "count" in query else 2**31-1
 
     # if product has already been crawled, then omit crawling again
@@ -56,7 +56,7 @@ def prod(request):
     # otherwise, the status would be "PROGRESS" or "SUCCESS"
     if res.state == "PENDING":
         prod.last_crawl_date = date.today()
-        parse_async.apply_async((asin,), task_id=asin)
+        parse_async.apply_async((asin, 10), task_id=asin)
 
     # celery task keeps track of which page it has reached so far
     # wait until the desginated ending page number has been reached
@@ -101,6 +101,7 @@ def click(request):
         return _success(200, model_to_dict(relationship))
     except ObjectDoesNotExist:
         return _fail(404, "Relationship not found")
+
 
 def rate(request):
     query = request.GET.dict()
