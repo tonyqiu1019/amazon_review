@@ -29,7 +29,7 @@ def load_html(url):
 
 	write_html(page, "/af12/jw7jb/public_html/%s.html"%(filename))
 	with open("/af12/jw7jb/public_html/proxy_log.txt", 'a', encoding='utf-8') as f:
-		f.write("%s\n %s\n %s\n", filename, url, header, proxy)
+		f.write("%s\n %s\n %s\n"%(filename, url, header, proxy))
 
 	page_response = page.text
 	return page_response
