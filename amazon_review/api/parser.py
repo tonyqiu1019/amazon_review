@@ -11,6 +11,11 @@ from utils import load_html
 def ReviewURL(asin, page):
 	return "https://www.amazon.com/product-reviews/" + asin + "/ref=cm_cr_arp_d_viewopt_srt?reviewerType=all_reviews&pageNumber=" + str(page) + "&sortBy=recent"
 
+def request_parser(url, asin=None, page_count=None):
+	html_page = load_html(review_url, asin, page_count)
+	parser = html.fromstring(review_page)
+	return parser
+
 def ParseReviews(asin):
 	# Added Retrying
 	page_count = 0
@@ -22,8 +27,7 @@ def ParseReviews(asin):
 				review_url = ReviewURL(asin, page_count)
 				# Add some recent user agent to prevent amazon from blocking the request
 				# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
-				review_page = load_html(review_url, asin, str(page_count))
-				parser = html.fromstring(review_page)
+				parser = request_parser(review_url, asin, str(page_count))
 				reviews, count = parse_review_list(parser)
 				if (count == 0):
 					 return review_list
@@ -40,8 +44,7 @@ def ParseProduct(asin):
 			amazon_url  = 'https://www.amazon.com/dp/'+asin
 			# Add some recent user agent to prevent amazon from blocking the request
 			# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
-			page_response = load_html(amazon_url, asin, '')
-			parser = html.fromstring(page_response)
+			parser = request_parser(amazon_url, asin, '')
 			general_info = parse_general(parser)
 			property_dict = parse_property(parser)
 			general_info.update({'asin': asin, 'properties':property_dict})
