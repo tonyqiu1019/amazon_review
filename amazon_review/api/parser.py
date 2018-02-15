@@ -22,7 +22,7 @@ def ParseReviews(asin):
 				review_url = ReviewURL(asin, page_count)
 				# Add some recent user agent to prevent amazon from blocking the request
 				# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
-                review_page = load_html(review_url)
+				review_page = load_html(review_url)
 				parser = html.fromstring(review_page)
 				reviews, count = parse_review_list(parser)
 				if (count == 0):
@@ -40,7 +40,7 @@ def ParseProduct(asin):
 			amazon_url  = 'https://www.amazon.com/dp/'+asin
 			# Add some recent user agent to prevent amazon from blocking the request
 			# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
-            page_response = load_html(amazon_url)
+			page_response = load_html(amazon_url)
 			parser = html.fromstring(page_response)
 			general_info = parse_general(parser)
 			property_dict = parse_property(parser)

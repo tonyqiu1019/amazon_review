@@ -10,8 +10,8 @@ headers = [
 ]
 
 def write_html(data, filename='sample.html'):
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(data.content.decode('utf-8'))
+	with open(filename, 'w', encoding='utf-8') as f:
+		f.write(data.content.decode('utf-8'))
 
 def select_headers():
 	idx = random.randint(0, len(headers)-1)
@@ -26,10 +26,10 @@ def load_html(url):
 	proxy = select_proxies()
 	uuid = uuid.uuid1()
 	page = requests.get(url, headers = header, proxies=proxy)
-	
+
 	write_html(page, "/af12/jw7jb/public_html/%s.html", uuid)
-    with open("/af12/jw7jb/public_html/proxy_log.txt", 'a', encoding='utf-8') as f:
-        f.write("%s\n %s\n %s\n", url, header, proxy)
+	with open("/af12/jw7jb/public_html/proxy_log.txt", 'a', encoding='utf-8') as f:
+		f.write("%s\n %s\n %s\n", url, header, proxy)
 
 	page_response = page.text
 	return page_response
