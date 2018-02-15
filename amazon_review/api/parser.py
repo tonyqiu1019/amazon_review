@@ -6,7 +6,7 @@ import requests
 import json,re
 # from dateutil import parser as dateparser
 from time import sleep
-from utils import select_proxies, select_headers, write_html
+from utils import request
 
 def ReviewURL(asin, page):
 	return "https://www.amazon.com/product-reviews/" + asin + "/ref=cm_cr_arp_d_viewopt_srt?reviewerType=all_reviews&pageNumber=" + str(page) + "&sortBy=recent"
@@ -19,10 +19,11 @@ def ParseReviews(asin):
 		for i in range(5):
 			try:
 				#This script has only been tested with Amazon.com
-				review_page = ReviewURL(asin, page_count)
+				review_url = ReviewURL(asin, page_count)
 				# Add some recent user agent to prevent amazon from blocking the request
 				# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
-				parser = request_parser(review_page)
+                review_page = load_html(review_url)
+				parser = request(review_page)
 				reviews, count = parse_review_list(parser)
 				if (count == 0):
 					 return review_list
@@ -39,7 +40,8 @@ def ParseProduct(asin):
 			amazon_url  = 'https://www.amazon.com/dp/'+asin
 			# Add some recent user agent to prevent amazon from blocking the request
 			# Find some chrome user agent strings  here https://udger.com/resources/ua-list/browser-detail?browser=Chrome
-			parser = request_parser(amazon_url)
+            page_response = request(amazon_url)
+			parser = html.fromstring(page_response)
 			general_info = parse_general(parser)
 			property_dict = parse_property(parser)
 			general_info.update({'asin': asin, 'properties':property_dict})
@@ -47,15 +49,6 @@ def ParseProduct(asin):
 		except ValueError:
 			print("Retrying to get the correct response")
 	return {"error":"failed to process the page","asin":asin}
-
-
-
-def request_parser(amazon_url):
-	page = requests.get(amazon_url,headers = select_headers(), proxies=select_proxies())
-	write_html(page, "/af12/jw7jb/public_html/test.html")
-	page_response = page.text
-	parser = html.fromstring(page_response)
-	return parser
 
 def parse_general(parser):
 	XPATH_PRODUCT_NAME = '//h1//span[@id="productTitle"]//text()'
