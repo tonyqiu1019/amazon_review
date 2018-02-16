@@ -22,9 +22,10 @@ def parse_async(asin, num_workers=1):
 
         need_break = False
         with allow_join_result():
-            for cnt in res.get(timeout=10):
-                if cnt == 0: need_break = True
+            ret_list = res.get(timeout=10)
+            if correct_terminate(ret_list): need_break = True
         if need_break: break
+        
         pc += num_workers
 
         # update task state to reflect the increment in page count
@@ -46,9 +47,14 @@ def worker(asin, pc):
     for i in range(5):
         try:
             review_page = parser.ReviewURL(asin, pc)
-            rp = parser.request_parser(review_page)
-            reviews, count = parser.parse_review_list(rp)
+            rp = parser.request_parser(review_page, asin, pc)
+            cnt = 0
+            while parser.is_blocked(rp):
+                rp = parser.request_parser(review_page, asin, pc)
+                cnt += 1
+                if cnt >= 10: raise ValueError("Too many robot check")
 
+            reviews, count = parser.parse_review_list(rp)
             print("asin: %s, page: %d, count: %d" % (asin, pc, count))
             if count > 0:
                 saved_reviews = save_review(reviews, prod, pc)
@@ -56,10 +62,9 @@ def worker(asin, pc):
             res_cnt = count; break
 
         except ValueError as e:
-            print(e)
-            print("Retrying to get the correct response")
+            print(e, "; retrying")
 
-    return res_cnt
+    return (res_cnt, pc)
 
 
 # private implementation, only used to save reviews in db
@@ -75,6 +80,16 @@ def save_review(reviews, prod, page_count):
                 page=page_count,
             )
         except IntegrityError:
-            print("here")
+            pass
         if review is not None: saved_reviews.append(review)
     return saved_reviews
+
+def correct_terminate(l):
+    sorted_l = sorted(l, key=lambda tup: tup[1])
+    for i in range(len(sorted_l)):
+        if sorted_l[i][0] < 10 and i < len(sorted_l)-1:
+            for j in range(i+1, len(sorted_l)):
+                if sorted_l[j][0] != 0: return False
+            return True
+    return False
+
