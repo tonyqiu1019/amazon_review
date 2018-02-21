@@ -174,20 +174,6 @@ def find_relationship(prod, start, cnt):
                 })
     return ret
 
-# def prettify(data):
-#     ret = { "payload": [] }
-#     for key, value in data.items():
-#         ret["payload"].append({ "xpath": key, "reviews": [] })
-#         for review in value:
-#             for best_sentence, contents in review:
-#                 ret["payload"]["reviews"].append({
-#                     "content": best_sentence,
-#                     "id": contents[1],
-#                     "sentiment": float(contents[2]),
-#                     "ranking": int(contents[3]),
-#                 })
-#     return ret
-
 ####Deprecated####
 # def highlight(request):
 #     query = request.GET.dict()
