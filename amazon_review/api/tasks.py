@@ -140,8 +140,16 @@ def correct_terminate(ret_list):
     return False
 
 
-# will write this tomorrow
 def fetch_from_api(url, property_data, review_data):
-    # data = {"properties": property_data, "reviews": review_data}
-    # print(json.dumps(data, indent=2))
-    # return []
+    data = {"properties": property_data, "reviews": review_data}
+    post_data = json.dumps(data, indent=2)
+    headers = {"content-type": "application/json"}
+
+    try:
+        resp = requests.post(url, data=post_data, headers=headers)
+        rel_data = resp.json()
+        return json.loads(rel_data)
+    except ConnectionError:
+        raise ValueError("The URL provided cannot be reached")
+    except ValueError:
+        raise ValueError("The response is not in a correct format")
