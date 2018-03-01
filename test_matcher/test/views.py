@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponse
 
 def match(request):
     query = request.GET.dict()
-    properties = query["reviews"]
+    properties = query["properties"]
     reviews = query["reviews"]
     relationships = keyword_match(properties, reviews)
     return JsonResponse(relationships)
