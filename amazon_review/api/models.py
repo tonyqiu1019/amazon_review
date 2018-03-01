@@ -23,13 +23,18 @@ class Relationship(models.Model):
     rating = models.FloatField(default=0.0)
     rank = models.FloatField(default=0.0)
 
+    # added by sdk implementation
+    url = models.CharField(max_length=1023, default='')
+
     def __str__(self):
         return str(model_to_dict(self))
+
+    class Meta:
+        unique_together = (("related_property", "related_review"),)
 
 class Review(models.Model):
     content = models.TextField(default='')
     prod = models.ForeignKey('Product', on_delete=models.CASCADE)
-    # user = models.ForeignKey('User', on_delete=models.CASCADE)
     review_id = models.CharField(max_length=1024, primary_key=True)
 
     # added by concurrency logic
