@@ -12,6 +12,7 @@ from . import parser, matcher, switcher, ranker
 
 from datetime import date, timedelta
 import time
+import json
 
 
 def index(request):
@@ -28,50 +29,42 @@ def _fail(stat, error_msg):
 def prod(request):
     start_t = time.time()
 
-    query = request.GET.dict()
-    asin = query["asin"]
-    start = int(query["start"]) if "start" in query else 1
-    cnt = int(query["count"]) if "count" in query else 2**31-1
-
-    # if product has already been crawled, then omit crawling again
-    prod = None; properties = []
+    asin, start, cnt, url = "", 0, 0, ""
     try:
-        prod = Product.objects.get(pk=asin)
-        properties = list(Property.objects.filter(prod=prod))
-    except ObjectDoesNotExist:
-        prod_query = parser.ParseProduct(asin)
-        prod, properties = save_prod(prod_query)
+        asin, start, cnt, url = read_request_query(request)
+    except ValueError as e:
+        return _fail(400, "Error reading query: %s" % e)
 
-    # measure time until crawling product
+    prod, properties = parse_product(asin)
     print("until product: ", time.time() - start_t)
 
-    # if the last crawl date is older than a week, then crawl again
     res = AsyncResult(asin)
-    if date.today() - prod.last_crawl_date > timedelta(7):
-        if res.state == "SUCCESS": res.forget()
+    need = analyze_async_result(res, prod, url)
 
-    # query celery task queue for the crawler process
     # "PENDING" is default state for unknown tasks
     # so if "PENDING", means this "asin" has not been crawled
     # otherwise, the status would be "PROGRESS" or "SUCCESS"
     if res.state == "PENDING":
         prod.last_crawl_date = date.today()
-        parse_async.apply_async((asin, 10), task_id=asin)
+        parse_async.apply_async((asin, 10, need, url), task_id=asin)
 
     # celery task keeps track of which page it has reached so far
     # wait until the desginated ending page number has been reached
     # if the crawler was called before, this while loop won't execute
     while res.state != "SUCCESS":
-        # if res.info is None: continue
-        try:
-            if res.info["page"] >= start+cnt: break
-        except:
-            continue
+        if isinstance(res.info, Exception):
+            return _fail(400, "parser raises: %s" % res.info)
+        else:
+            try:
+                if res.info["page"] >= start + cnt: break
+            except TypeError:
+                pass
         # avoid querying task queue database too frequently
         time.sleep(0.1)
-        # print("inside while loop")
+        # if time too long, fail no matter the status of crawler
+        if time.time() - start_t > 30:
+            return _fail(400, "parser takes too long to respond")
 
-    # measure time until the (blocking) wait expires
     print("until not blocking: ", time.time() - start_t)
 
     # has_more denotes whether there are more reviews
@@ -88,7 +81,7 @@ def prod(request):
     data = find_relationship(prod, start, cnt)
 
     print("total: ", time.time() - start_t)
-    return _success(200, {"has_more": has_more, **data})
+    return _success(200, { "has_more": has_more, **data })
 
 
 def click(request):
@@ -118,7 +111,7 @@ def rate(request):
         return _fail(404, "Relationship not found")
 
 
-# private implementations
+# private implementations below
 def save_prod(query):
     asin = query['asin']
     product_name = query['name']
@@ -131,6 +124,7 @@ def save_prod(query):
         properties = save_property(query, prod)
     return prod, properties
 
+
 def save_review(reviews, prod):
     saved_reviews = []
     for review_info in reviews:
@@ -140,6 +134,7 @@ def save_review(reviews, prod):
             review = Review.objects.create(review_id = review_info['review_id'], content=review_info['review_text'], prod=prod)
             saved_reviews.append(review)
     return saved_reviews
+
 
 def save_property(query, prod):
     properties = query['properties']
@@ -151,9 +146,60 @@ def save_property(query, prod):
         saved_properties.append(property)
     return saved_properties
 
+
+def read_request_query(request):
+    query = request.GET.dict()
+
+    if 'asin' not in query:
+        return _fail(400, "Query asin is required")
+    asin = query["asin"]
+
+    start = int(query["start"]) if "start" in query else 1
+    cnt = int(query["count"]) if "count" in query else 2**31-1
+
+    # url is empty if we use internal inference algorithm
+    url = ""
+    if request.method == "POST":
+        post_data = json.loads(request.body.decode('utf-8'))
+        if "url" not in post_data:
+            return _fail(400, "Cannot read URL from post data")
+        url = post_data["url"]
+
+    return asin, start, cnt, url
+
+
+def parse_product(asin):
+    # if product has already been crawled, then omit crawling again
+    try:
+        prod = Product.objects.get(pk=asin)
+        properties = list(Property.objects.filter(prod=prod))
+        return prod, properties
+    except ObjectDoesNotExist:
+        prod_query = parser.ParseProduct(asin)
+        return save_prod(prod_query)
+
+
+def analyze_async_result(res, prod, url):
+    if res.state == "FAILURE":
+        # if the crawler has failed, then start again
+        res.forget()
+    elif res.state == "SUCCESS":
+        if date.today() - prod.last_crawl_date > timedelta(7):
+            # if the last crawl date is too old, then crawl again
+            res.forget()
+        else:
+            # if no relationship w/ url, run task without parsing
+            rels = Relationship.objects.filter(prod=prod, url=url)
+            if len(rels) == 0:
+                res.forget()
+                return False
+    return True
+
+
 def find_relationship(prod, start, cnt):
-    ret = {}
+    ret = { "payload": [] }
     related_properties = Property.objects.filter(prod = prod)
+
     for rp in related_properties:
         relationships = Relationship.objects.filter(
             prod=prod,
@@ -161,20 +207,16 @@ def find_relationship(prod, start, cnt):
             related_review__page__gte=start,
             related_review__page__lt=start+cnt,
         )
-        ret[rp.xpath] = ranker.rank(relationships)
-    return ret
+        ret["payload"].append({
+            "xpath": rp.xpath, "topic": rp.topic, "reviews": [],
+        })
+        for value in ranker.rank(relationships):
+            for best_sentence, content in value.items():
+                ret["payload"][-1]["reviews"].append({
+                    "content": best_sentence,
+                    "id": content[1],
+                    "sentiment": float(content[2]),
+                    "ranking": int(content[3]),
+                })
 
-####Deprecated####
-# def highlight(request):
-#     query = request.GET.dict()
-#     review_id = query['review']
-#     related_review = Review.objects.get(pk=review_id)
-#     asin = related_review.prod.asin
-#     related_prod = Product.objects.get(pk=asin)
-#     all_relation = Relationship.objects.filter(related_review=related_review, prod=related_prod)
-#     ret_list = []
-#     for relation in all_relation:
-#         ret_list.append({'sentence':relation.best_sentence,
-#         'property' : relation.related_property.topic,
-#         'sentiment' : relation.sentiment})
-#     return _success(200, {'content':ret_list})
+    return ret

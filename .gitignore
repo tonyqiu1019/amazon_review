@@ -112,3 +112,6 @@ ENV/
 
 #credential
 **/credential.py
+
+#settings.py differs
+settings.py
