@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 
 def match(request):
-    query = request.GET.dict()
+    query = request.POST.dict()
     properties = query["properties"]
     reviews = query["reviews"]
     relationships = keyword_match(properties, reviews)
