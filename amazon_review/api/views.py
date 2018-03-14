@@ -73,12 +73,13 @@ def prod(request):
     # 2) the crawler has already terminated
     more_rels = Relationship.objects.filter(
         prod=prod,
+        url=url,
         related_review__page__gte=start+cnt,
     )
     has_more = (len(more_rels) > 0) or (res.state == "PROGRESS")
 
     # find relationshop has been rewritten for purpose of pagination
-    data = find_relationship(prod, start, cnt)
+    data = find_relationship(prod, start, cnt, url)
 
     print("total: ", time.time() - start_t)
     return _success(200, { "has_more": has_more, **data })
@@ -181,28 +182,32 @@ def parse_product(asin):
 
 def analyze_async_result(res, prod, url):
     if res.state == "FAILURE":
-        # if the crawler has failed, then start again
+        # if failed for custom URL reason, don't need to parse again
+        known_errors = [
+            "The response is not in a correct format",
+            "The URL provided cannot be reached",
+        ]
+        ret = str(res.info) not in known_errors
         res.forget()
+        return ret
     elif res.state == "SUCCESS":
-        if date.today() - prod.last_crawl_date > timedelta(7):
-            # if the last crawl date is too old, then crawl again
+        # if post request, cannot assume API behavior consistent
+        if url != '':
             res.forget()
-        else:
-            # if no relationship w/ url, run task without parsing
-            rels = Relationship.objects.filter(prod=prod, url=url)
-            if len(rels) == 0:
-                res.forget()
-                return False
+        # however, if already have relationships, no need to parse
+        rels = Relationship.objects.filter(prod=prod)
+        return len(rels) == 0
     return True
 
 
-def find_relationship(prod, start, cnt):
+def find_relationship(prod, start, cnt, url):
     ret = { "payload": [] }
     related_properties = Property.objects.filter(prod = prod)
 
     for rp in related_properties:
         relationships = Relationship.objects.filter(
             prod=prod,
+            url=url,
             related_property=rp,
             related_review__page__gte=start,
             related_review__page__lt=start+cnt,
