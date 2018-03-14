@@ -30,7 +30,7 @@ class Relationship(models.Model):
         return str(model_to_dict(self))
 
     class Meta:
-        unique_together = (("related_property", "related_review"),)
+        unique_together = (("related_property", "related_review", "url"),)
 
 class Review(models.Model):
     content = models.TextField(default='')

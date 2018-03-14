@@ -62,8 +62,8 @@ def prod(request):
         # avoid querying task queue database too frequently
         time.sleep(0.1)
         # if time too long, fail no matter the status of crawler
-        if time.time() - start_t > 30:
-            return _fail(400, "parser takes too long to respond")
+        if time.time() - start_t > 60:
+            return _fail(403, "parser takes too long to respond")
 
     print("until not blocking: ", time.time() - start_t)
 
@@ -151,7 +151,7 @@ def read_request_query(request):
     query = request.GET.dict()
 
     if 'asin' not in query:
-        return _fail(400, "Query asin is required")
+        raise ValueError("Query asin is required")
     asin = query["asin"]
 
     start = int(query["start"]) if "start" in query else 1
@@ -162,7 +162,7 @@ def read_request_query(request):
     if request.method == "POST":
         post_data = json.loads(request.body.decode('utf-8'))
         if "url" not in post_data:
-            return _fail(400, "Cannot read URL from post data")
+            raise ValueError("Cannot read URL from post data")
         url = post_data["url"]
 
     return asin, start, cnt, url
