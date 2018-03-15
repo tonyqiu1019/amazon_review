@@ -51,8 +51,7 @@ def parse_async(asin, num_workers=1, need_parse=True, url=''):
 
         rels = []
         if url == "":
-            rels = matcher.gibbs(property_data, review_data)
-            fetch_from_api(url, property_data, review_data)
+            rels = matcher.keyword_match(property_data, review_data)
         else:
             rels = fetch_from_api(url, property_data, review_data)
         save_relationship(rels, prod, url)
@@ -148,7 +147,7 @@ def fetch_from_api(url, property_data, review_data):
     try:
         resp = requests.post(url, data=post_data, headers=headers)
         rel_data = resp.json()
-        return json.loads(rel_data)
+        return rel_data["relationships"]
     except ConnectionError:
         raise ValueError("The URL provided cannot be reached")
     except ValueError:

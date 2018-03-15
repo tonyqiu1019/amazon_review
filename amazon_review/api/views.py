@@ -62,8 +62,8 @@ def prod(request):
         # avoid querying task queue database too frequently
         time.sleep(0.1)
         # if time too long, fail no matter the status of crawler
-        if time.time() - start_t > 30:
-            return _fail(400, "parser takes too long to respond")
+        if time.time() - start_t > 60:
+            return _fail(403, "parser takes too long to respond")
 
     print("until not blocking: ", time.time() - start_t)
 
@@ -73,12 +73,13 @@ def prod(request):
     # 2) the crawler has already terminated
     more_rels = Relationship.objects.filter(
         prod=prod,
+        url=url,
         related_review__page__gte=start+cnt,
     )
     has_more = (len(more_rels) > 0) or (res.state == "PROGRESS")
 
     # find relationshop has been rewritten for purpose of pagination
-    data = find_relationship(prod, start, cnt)
+    data = find_relationship(prod, start, cnt, url)
 
     print("total: ", time.time() - start_t)
     return _success(200, { "has_more": has_more, **data })
@@ -151,7 +152,7 @@ def read_request_query(request):
     query = request.GET.dict()
 
     if 'asin' not in query:
-        return _fail(400, "Query asin is required")
+        raise ValueError("Query asin is required")
     asin = query["asin"]
 
     start = int(query["start"]) if "start" in query else 1
@@ -162,7 +163,7 @@ def read_request_query(request):
     if request.method == "POST":
         post_data = json.loads(request.body.decode('utf-8'))
         if "url" not in post_data:
-            return _fail(400, "Cannot read URL from post data")
+            raise ValueError("Cannot read URL from post data")
         url = post_data["url"]
 
     return asin, start, cnt, url
@@ -181,28 +182,32 @@ def parse_product(asin):
 
 def analyze_async_result(res, prod, url):
     if res.state == "FAILURE":
-        # if the crawler has failed, then start again
+        # if failed for custom URL reason, don't need to parse again
+        known_errors = [
+            "The response is not in a correct format",
+            "The URL provided cannot be reached",
+        ]
+        ret = str(res.info) not in known_errors
         res.forget()
+        return ret
     elif res.state == "SUCCESS":
-        if date.today() - prod.last_crawl_date > timedelta(7):
-            # if the last crawl date is too old, then crawl again
+        # if post request, cannot assume API behavior consistent
+        if url != '':
             res.forget()
-        else:
-            # if no relationship w/ url, run task without parsing
-            rels = Relationship.objects.filter(prod=prod, url=url)
-            if len(rels) == 0:
-                res.forget()
-                return False
+        # however, if already have relationships, no need to parse
+        rels = Relationship.objects.filter(prod=prod)
+        return len(rels) == 0
     return True
 
 
-def find_relationship(prod, start, cnt):
+def find_relationship(prod, start, cnt, url):
     ret = { "payload": [] }
     related_properties = Property.objects.filter(prod = prod)
 
     for rp in related_properties:
         relationships = Relationship.objects.filter(
             prod=prod,
+            url=url,
             related_property=rp,
             related_review__page__gte=start,
             related_review__page__lt=start+cnt,

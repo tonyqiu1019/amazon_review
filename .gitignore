@@ -114,4 +114,4 @@ ENV/
 **/credential.py
 
 #settings.py differs
-amazon_review/amazon_review/settings.py
+#amazon_review/amazon_review/settings.py
