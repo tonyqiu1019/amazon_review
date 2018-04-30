@@ -33,27 +33,5 @@ def keyword_match(properties, reviews):
 
     return ret
 
-def gibbs(properties, reviews):
-    sid = SentimentIntensityAnalyzer()
-    twt = TreebankWordTokenizer()
-    ss = SnowballStemmer('english')
-    ret = []
-
-    for review in reviews:
-        if not isinstance(review["content"], str): continue
-        sentences = tokenize.sent_tokenize(review["content"])
-
-        for sentence in sentences:
-            tmp = [ss.stem(w.lower()) for w in twt.tokenize(sentence)]
-            words = ["NUM" if w.isdigit() else w for w in tmp]
-            for p in properties:
-                score = 0
-                for w in words:
-                    if p["topic"] in topics and w in topics[p["topic"]]:
-                        score += math.log(topics[p["topic"]][w])
-                perplexity = math.exp(-score / len(words))
-                if perplexity > 3.0:
-                    ps = sid.polarity_scores(sentence.lower())['compound']
-                    ret.append({'related_property_id': p["id"], 'best_sentence': sentence, 'related_review_id': review["id"], 'sentiment': ps})
-
-    return ret
+def htmm_inference(properties, reviews):
+    pass
