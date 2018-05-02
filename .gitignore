@@ -117,3 +117,6 @@ ENV/
 word2vec_cluster/data/
 #settings.py differs
 #amazon_review/amazon_review/settings.py
+
+#data
+word2vec_cluster/data/

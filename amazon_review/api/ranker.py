@@ -3,12 +3,12 @@ from django.forms import model_to_dict
 
 def rank(relationships):
     return rank_by_click(relationships)
-    
+
 def present(ordered_relationships):
     relationship_list = []
     for relationship in ordered_relationships:
         review = relationship.related_review
-        relationship_list.append({relationship.best_sentence: [review.content, review.review_id, relationship.sentiment, relationship.pk]})
+        relationship_list.append({relationship.best_sentence: [review.content, review.review_id, relationship.sentiment, relationship.pk, relationship.clicked, relationship.rating]})
     return relationship_list
 
 def rank_by_click(relationships):
