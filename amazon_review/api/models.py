@@ -22,10 +22,10 @@ class Relationship(models.Model):
     rating_count = models.IntegerField(default=0)
     rating = models.FloatField(default=0.0)
     rank = models.FloatField(default=0.0)
-
     # added by sdk implementation
     url = models.CharField(max_length=1023, default='')
-
+    # added by find_cluster
+    subtopic = models.IntegerField(default=-1)
     def __str__(self):
         return str(model_to_dict(self))
 

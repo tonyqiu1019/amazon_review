@@ -120,3 +120,6 @@ word2vec_cluster/data/
 
 #data
 word2vec_cluster/data/
+
+#
+**.pickle
