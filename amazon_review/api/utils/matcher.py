@@ -91,10 +91,8 @@ def find_cluster(relationships):
         embeded_sentence = model.encode(review, bsize=128, tokenize=True, verbose=True)
         closest_cluster = None
         closest_dist = float('inf')
-        for cluster in centers[relationships['related_property_id']]:
+        for idx, cluster in enumerate(centers[relationships['related_property_id']]):
             dist = numpy.linalg.norm(center, embeded_sentence)
             if closest_dist > dist && dist < margin :
-                 closest_cluster = cluster
-                 ## Need definition of closest cluster in what kind of format
-                 ## id? key words? Or anything else
+                 closest_cluster = idx
         relationship["sub_cluster"] = closest_cluster
