@@ -6,8 +6,14 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk import tokenize
 from nltk.tokenize.treebank import TreebankWordTokenizer
 from nltk.stem.snowball import SnowballStemmer
-
 from .topWords import topics
+import gensim, json, pickle, re, torch
+import numpy as np
+
+model = torch.load('./encoder/infersent.allnli.pickle')
+centers = pickle.load(open('./data/centers.pickle', 'rb'))
+model.set_glove_path('./data/glove.840B.300d.txt')
+model.build_vocab_k_words(K=100000)
 
 def keyword_match(properties, reviews):
     sid = SentimentIntensityAnalyzer()
@@ -55,5 +61,19 @@ def gibbs(properties, reviews):
                 if perplexity > 3.0:
                     ps = sid.polarity_scores(sentence.lower())['compound']
                     ret.append({'related_property_id': p["id"], 'best_sentence': sentence, 'related_review_id': review["id"], 'sentiment': ps})
-
     return ret
+
+def find_cluster(relationships):
+    margin = float('inf') ## Need testing
+    for relationship in relationships:
+        embeded_sentence = model.encode(review, bsize=128, tokenize=True, verbose=True)
+        closest_cluster = None
+        closest_dist = float('inf')
+        for cluster in centers[relationships['related_property_id']]:
+            dist = numpy.linalg.norm(center, embeded_sentence)
+            if closest_dist > dist && dist < margin :
+                 closest_cluster = cluster
+                 ## Need definition of closest cluster in what kind of format
+                 ## id? key words? Or anything else
+        relationship["sub_cluster"] = closest_cluster
+    return 
