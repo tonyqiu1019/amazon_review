@@ -5,7 +5,7 @@ from celery import shared_task, current_task, group
 from celery.result import AsyncResult, allow_join_result
 
 from api.models import *
-from . import parser, matcher
+from api.utils import parser, matcher
 
 import time, requests, json
 

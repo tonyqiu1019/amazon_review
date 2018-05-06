@@ -8,7 +8,7 @@ from celery.result import AsyncResult
 
 from api.models import *
 from api.tasks import *
-from . import parser, matcher, switcher, ranker
+from api.utils import parser, matcher, switcher, ranker
 
 from datetime import date, timedelta
 import time

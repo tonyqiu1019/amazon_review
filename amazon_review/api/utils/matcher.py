@@ -24,6 +24,14 @@ idx_topic = [
     "Average Battery Life (in hours)",
 ]
 
+import gensim, json, pickle, re, torch
+import numpy as np
+
+model = torch.load('./encoder/infersent.allnli.pickle')
+centers = pickle.load(open('./data/centers.pickle', 'rb'))
+model.set_glove_path('./data/glove.840B.300d.txt')
+model.build_vocab_k_words(K=100000)
+
 def keyword_match(properties, reviews):
     ret = []
 
@@ -62,6 +70,7 @@ def htmm_inference(properties, reviews):
             if idx_topic[i] == p["topic"]: idx_id[i] = p["id"]
 
     for review in reviews:
+<<<<<<< HEAD:amazon_review/api/matcher.py
         doc = process_doc(review["content"])
         path, entropy = htmm.predict_topic(doc)
         for i, stn in enumerate(doc.sentence_list):
@@ -75,4 +84,36 @@ def htmm_inference(properties, reviews):
             })
 
     find_cluster(ret)
+=======
+        if not isinstance(review["content"], str): continue
+        sentences = tokenize.sent_tokenize(review["content"])
+
+        for sentence in sentences:
+            tmp = [ss.stem(w.lower()) for w in twt.tokenize(sentence)]
+            words = ["NUM" if w.isdigit() else w for w in tmp]
+            for p in properties:
+                score = 0
+                for w in words:
+                    if p["topic"] in topics and w in topics[p["topic"]]:
+                        score += math.log(topics[p["topic"]][w])
+                perplexity = math.exp(-score / len(words))
+                if perplexity > 3.0:
+                    ps = sid.polarity_scores(sentence.lower())['compound']
+                    ret.append({'related_property_id': p["id"], 'best_sentence': sentence, 'related_review_id': review["id"], 'sentiment': ps})
+>>>>>>> 6a4bde0d5efddde89ab6d5ac0522baa24f58dfd5:amazon_review/api/utils/matcher.py
     return ret
+
+def find_cluster(relationships):
+    margin = float('inf') ## Need testing
+    for relationship in relationships:
+        embeded_sentence = model.encode(review, bsize=128, tokenize=True, verbose=True)
+        closest_cluster = None
+        closest_dist = float('inf')
+        for cluster in centers[relationships['related_property_id']]:
+            dist = numpy.linalg.norm(center, embeded_sentence)
+            if closest_dist > dist && dist < margin :
+                 closest_cluster = cluster
+                 ## Need definition of closest cluster in what kind of format
+                 ## id? key words? Or anything else
+        relationship["sub_cluster"] = closest_cluster
+    return
